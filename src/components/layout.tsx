@@ -3,9 +3,9 @@ import Sidebar from "./sidebar.tsx";
 
 const Layout = ({ children }) => {
   return (
-    <div className="flex">
+    <div className="flex h-screen">
       <Sidebar />
-      <div className="flex-1 p-6">{children}</div>
+      <div className="flex-1 overflow-y-auto">{children}</div>
     </div>
   );
 };

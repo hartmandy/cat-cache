@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import Modal from "./modal.tsx";
+import { onboardPet } from "../../../data/pet.ts";
 
 interface OnboardModalProps {
   show: boolean;
   onClose: () => void;
-  onSubmit: (formData: FormData) => void;
 }
 
 interface FormData {
@@ -16,14 +16,10 @@ interface FormData {
   unit: string;
   type: string;
   breed: string;
-  notes: string;
+  reason: string;
 }
 
-const OnboardModal: React.FC<OnboardModalProps> = ({
-  show,
-  onClose,
-  onSubmit,
-}) => {
+const OnboardModal: React.FC<OnboardModalProps> = ({ show, onClose }) => {
   // Dummy data
   const ages = Array.from({ length: 101 }, (_, i) => i);
   const units = ["wks", "mo", "yrs"];
@@ -40,7 +36,7 @@ const OnboardModal: React.FC<OnboardModalProps> = ({
     unit: units[0],
     type: types[0],
     breed: breeds[0],
-    notes: "",
+    reason: "",
   });
 
   const [errors, setErrors] = useState<Partial<FormData>>({});
@@ -66,18 +62,19 @@ const OnboardModal: React.FC<OnboardModalProps> = ({
     else if (!/^\d{10}$/.test(formData.phone))
       newErrors.phone = "Phone number must be 10 digits";
     if (!formData.petName) newErrors.petName = "Pet name is required";
-    if (!formData.notes) newErrors.notes = "Reason for visit is required";
+    if (!formData.reason) newErrors.reason = "Reason for visit is required";
 
     return newErrors;
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
     } else {
-      onSubmit(formData);
+      await onboardPet(formData);
+      onClose();
     }
   };
 
@@ -252,13 +249,13 @@ const OnboardModal: React.FC<OnboardModalProps> = ({
 
           <textarea
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="notes"
+            id="reason"
             placeholder="Reason for Visit"
-            value={formData.notes}
+            value={formData.reason}
             onChange={handleChange}
           ></textarea>
-          {errors.notes && (
-            <p className="text-red-500 text-xs italic">{errors.notes}</p>
+          {errors.reason && (
+            <p className="text-red-500 text-xs italic">{errors.reason}</p>
           )}
         </div>
 

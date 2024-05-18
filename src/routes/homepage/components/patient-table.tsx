@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { TargetIcon } from "@radix-ui/react-icons";
 
-const PatientListTable = () => {
+const PatientListTable = ({ visits }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   const patients = [
     {
@@ -190,7 +190,7 @@ const PatientListTable = () => {
     },
   ];
 
-  const filteredPatients = patients.filter(
+  const filteredPatients = visits.filter(
     (patient) =>
       patient.petName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       patient.petType.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -214,25 +214,10 @@ const PatientListTable = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "In Treatment":
-        return "text-red-500";
-      case "Stable":
-        return "text-green-500";
-      case "Under Observation":
-        return "text-yellow-500";
-      case "Recovering":
-        return "text-orange-400";
-      default:
-        return "text-gray-500";
-    }
-  };
-
   return (
     <div className="overflow-x-auto">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="md:text-3xl lg:text-4xl text-2xl text-gray-600 font-bold mr-1">
+        <h2 className="md:text-xl lg:text-2xl text-lg text-gray-600 font-light mr-1">
           Patients in Our Care
         </h2>
         <input
@@ -243,28 +228,18 @@ const PatientListTable = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
-      <table className="min-w-full bg-white border border-gray-300 table-fixed">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="w-1/6 py-2 px-4 border-b border-gray-300 text-left">
+      <table className="min-w-full table-fixed">
+        <thead className="bg-slate-100">
+          <tr>
+            <th className="w-1/12 py-2 px-4 text-left rounded-tl-lg rounded-bl-lg">
               Pet Name
             </th>
-            <th className="w-1/6 py-2 px-4 border-b border-gray-300 text-left">
-              Pet Type
-            </th>
-            <th className="w-1/6 py-2 px-4 border-b border-gray-300 text-left">
-              Pet Breed
-            </th>
-            <th className="w-1/6 py-2 px-4 border-b border-gray-300 text-left">
-              Owner Name
-            </th>
-            <th className="w-1/6 py-2 px-4 border-b border-gray-300 text-left">
-              Owner Contact
-            </th>
-            <th className="w-1/6 py-2 px-4 border-b border-gray-300 text-left">
-              Status
-            </th>
-            <th className="w-1/6 py-2 px-4 border-b border-gray-300 text-left">
+            <th className="w-1/12 py-2 px-4 text-left">Type</th>
+            <th className="w-2/12 py-2 px-4 text-left">Breed</th>
+            <th className="w-1/12 py-2 px-4 text-left">Owner</th>
+            <th className="w-1/12 py-2 px-4 text-left">Contact</th>
+            <th className="w-4/12 py-2 px-4 text-left">Status</th>
+            <th className="w-1/12 py-2 px-4 text-left rounded-tr-lg rounded-br-lg">
               Profile
             </th>
           </tr>
@@ -272,30 +247,36 @@ const PatientListTable = () => {
         <tbody>
           {displayedPatients.map((patient) => (
             <tr key={patient.id}>
-              <td className="w-1/6 py-2 px-4 border-b border-gray-300">
-                {patient.petName}
-              </td>
-              <td className="w-1/6 py-2 px-4 border-b border-gray-300">
-                {patient.petType}
-              </td>
-              <td className="w-1/6 py-2 px-4 border-b border-gray-300">
-                {patient.petBreed}
-              </td>
-              <td className="w-1/6 py-2 px-4 border-b border-gray-300">
-                {patient.ownerName}
-              </td>
-              <td className="w-1/6 py-2 px-4 border-b border-gray-300">
-                {patient.ownerContact}
-              </td>
-              <td className="w-1/6 py-2 px-4 border-b border-gray-300">
-                <div className="inline-flex items-center">
-                  <TargetIcon
-                    className={`mr-2 ${getStatusColor(patient.status)} w-5 h-5`}
-                  />
-                  <span>{patient.status}</span>
+              <td className="w-1/6 py-2 px-4">{patient.petName}</td>
+              <td className="w-1/6 py-2 px-4">
+                <div
+                  className={`inline-flex rounded-full px-2 py-1 font-semibold ${getPetTypeClassNames(
+                    patient.petType
+                  )}`}
+                >
+                  {patient.petType}
                 </div>
               </td>
-              <td className="w-1/6 py-2 px-4 border-b border-gray-300">
+              <td className="w-1/6 py-2 px-4">
+                <div className="inline-flex bg-green-100 text-green-800 rounded-full px-2 py-1 font-semibold">
+                  {patient.petBreed}
+                </div>
+              </td>
+              <td className="w-1/6 py-2 px-4">{patient.ownerName}</td>
+              <td className="w-1/6 py-2 px-4">{patient.ownerContact}</td>
+              <td className="w-1/6 py-2 px-4">
+                <div
+                  className={`inline-flex items-center rounded-full px-2 py-1 font-semibold ${getStatusClassNames(
+                    patient.status
+                  )}`}
+                >
+                  <TargetIcon className={`mr-2 w-5 h-5`} />
+                  <span className="text-nowrap overflow-ellipsis">
+                    {patient.status}
+                  </span>
+                </div>
+              </td>
+              <td className="w-1/6 py-2 px-4">
                 <Link
                   to={`/patient-profile/${patient.id}`}
                   className="text-blue-500 hover:underline"
@@ -307,31 +288,58 @@ const PatientListTable = () => {
           ))}
         </tbody>
       </table>
-      <div className="flex justify-between items-center mt-4">
-        <button
-          className={`bg-gray-700 text-white font-bold py-2 px-4 rounded ${
-            currentPage === 1
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-gray-800"
-          }`}
-          onClick={handlePreviousPage}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
+      <div className="flex justify-end items-center mt-4 space-x-2">
         <span className="text-gray-700">
           Page {currentPage} of {totalPages}
         </span>
         <button
-          className={`bg-gray-700 text-white font-bold py-2 px-4 rounded ${
+          className={`text-gray-700 ${
+            currentPage === 1
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:text-gray-900"
+          }`}
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+
+        <button
+          className={`text-gray-700 ${
             currentPage === totalPages
               ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-gray-800"
+              : "hover:text-gray-900"
           }`}
           onClick={handleNextPage}
           disabled={currentPage === totalPages}
         >
-          Next
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
         </button>
       </div>
     </div>
@@ -339,3 +347,24 @@ const PatientListTable = () => {
 };
 
 export default PatientListTable;
+
+const getStatusClassNames = (status) => {
+  switch (status) {
+    case "In Treatment":
+      return "text-red-800 bg-red-100";
+    case "Stable":
+      return "text-green-800 bg-green-100";
+    case "Under Observation":
+      return "text-yellow-800 bg-yellow-100";
+    case "Recovering":
+      return "text-orange-800 bg-orange-100";
+    default:
+      return "text-gray-800 bg-gray-100";
+  }
+};
+
+const getPetTypeClassNames = (petType) => {
+  return petType === "Dog"
+    ? "bg-blue-100 text-blue-800"
+    : "bg-purple-100 text-purple-800";
+};

@@ -1,27 +1,35 @@
 import React from "react";
 import { CalendarIcon, ListBulletIcon } from "@radix-ui/react-icons";
-import { Link } from "react-router-dom";
-
+import { NavLink } from "react-router-dom";
 const Sidebar = () => {
   return (
-    <div className="w-16 h-screen bg-white flex flex-col items-center shadow-md">
-      <div className="w-10 h-10 p-2 mb-4 hidden md:block">
-        <Link to="/">
-          <img
-            src={`/images/logo.png`}
-            alt="placeholder"
-            className="w-full h-full object-cover my-4"
-          />
-        </Link>
+    <div className="w-16 h-screen bg-[#151a22] flex flex-col items-center shadow-md">
+      <div className="hidden md:flex">
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
+            `hover:bg-[#2a2f38] p-4 ${isActive ? "bg-[#2a2f38]" : ""}`
+          }
+        >
+          <img src={`/images/logo.png`} alt="placeholder" className="w-8 h-8" />
+        </NavLink>
       </div>
-      <div className="pt-10">
-        <Link to="/patient-list">
-          <ListBulletIcon className="w-6 h-6 mb-8 text-gray-600" />
-        </Link>
-        <Link to="/er-dashboard">
-          <CalendarIcon className="w-6 h-6 text-gray-600" />
-        </Link>
-      </div>
+      <NavLink
+        to="/er-dashboard"
+        className={({ isActive }) =>
+          `hover:bg-[#2a2f38] p-5 ${isActive ? "bg-[#2a2f38]" : ""}`
+        }
+      >
+        <CalendarIcon className="w-6 h-6 text-slate-100 hover:text-slate-300" />
+      </NavLink>
+      <NavLink
+        to="/patient-list"
+        className={({ isActive }) =>
+          `hover:bg-[#2a2f38] p-5 ${isActive ? "bg-[#2a2f38]" : ""}`
+        }
+      >
+        <ListBulletIcon className="w-6 h-6 text-slate-100 hover:text-slate-300" />
+      </NavLink>
     </div>
   );
 };
