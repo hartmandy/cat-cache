@@ -46,4 +46,12 @@ async function onboardPet(formData: PetFormData) {
   }
 }
 
-export { onboardPet };
+function searchOwner(test: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    // Your search logic here
+    const results: string[] = []; // Replace this with actual search results
+    resolve(results);
+  });
+}
+
+export { onboardPet, searchOwner };
