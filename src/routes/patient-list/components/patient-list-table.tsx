@@ -273,6 +273,12 @@ const patients = [
   },
 ];
 
+const getPetTypeClassNames = (petType) => {
+  return petType === "Dog"
+    ? "bg-blue-100 text-blue-800"
+    : "bg-purple-100 text-purple-800";
+};
+
 const PatientListTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -424,9 +430,3 @@ const PatientListTable = () => {
 };
 
 export default PatientListTable;
-
-const getPetTypeClassNames = (petType) => {
-  return petType === "Dog"
-    ? "bg-blue-100 text-blue-800"
-    : "bg-purple-100 text-purple-800";
-};

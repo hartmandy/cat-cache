@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Modal from "./modal.tsx";
 import debounce from "lodash.debounce";
 
@@ -10,8 +10,9 @@ interface Pet {
 export default function IntakeModal({ show, onClose, onSubmit }) {
   const [petName, setPetName] = useState("");
   const [pets, setPets] = useState<Pet[]>([]);
-  const [selectedPetId, setSelectedPetId] = useState(null);
-  const [visitReason, setVisitReason] = useState(""); // New state for visit reason
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+  const [visitReason, setVisitReason] = useState("");
+  const [showOptions, setShowOptions] = useState(false);
 
   const fetchPets = async (query) => {
     if (!query) return;
@@ -22,28 +23,28 @@ export default function IntakeModal({ show, onClose, onSubmit }) {
       }
       const data = await response.json();
       setPets(data);
+      setShowOptions(true);
     } catch (error) {
       console.error("Failed to fetch pets", error);
     }
   };
 
-  const debouncedFetchPets = debounce(fetchPets, 300);
+  const debouncedFetchPets = useCallback(debounce(fetchPets, 300), []);
 
   useEffect(() => {
     debouncedFetchPets(petName);
-  }, [petName]);
+  }, [petName, debouncedFetchPets]);
 
-  const handlePetSelect = (petId) => {
-    setSelectedPetId(petId);
-    const selectedPet = pets.find((pet) => pet.id === petId);
-    if (!selectedPet) return;
-    setPetName(selectedPet.name);
+  const handlePetSelect = (pet) => {
+    setSelectedPet(pet);
+    setPetName(pet.name);
+    setShowOptions(false);
     setPets([]);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!selectedPetId) {
+    if (!selectedPet || !selectedPet.id) {
       alert("Please select a valid pet");
       return;
     }
@@ -54,8 +55,8 @@ export default function IntakeModal({ show, onClose, onSubmit }) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          petId: selectedPetId,
-          reason: visitReason, // This can be dynamic based on additional form fields
+          petId: selectedPet.id,
+          reason: visitReason,
         }),
       });
       if (!response.ok) {
@@ -64,7 +65,11 @@ export default function IntakeModal({ show, onClose, onSubmit }) {
       const data = await response.json();
       onSubmit();
       console.log("Visit created", data);
-      onClose(); // Close modal on successful submission
+      // Reset the form
+      setPetName("");
+      setSelectedPet(null);
+      setVisitReason("");
+      onClose();
     } catch (error) {
       console.error("Failed to create visit", error);
     }
@@ -74,7 +79,7 @@ export default function IntakeModal({ show, onClose, onSubmit }) {
     <Modal show={show} onClose={onClose}>
       <h2 className="text-2xl font-bold mb-4">Intake Patient</h2>
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
+        <div className="mb-4 relative">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
             htmlFor="petName"
@@ -87,15 +92,28 @@ export default function IntakeModal({ show, onClose, onSubmit }) {
             type="text"
             placeholder="Pet Name"
             value={petName}
-            onChange={(e) => setPetName(e.target.value)}
+            onChange={(e) => {
+              setPetName(e.target.value);
+              setShowOptions(true);
+            }}
+            onBlur={() => setShowOptions(false)}
           />
-          <ul>
-            {pets.map((pet) => (
-              <li key={pet.id} onClick={() => handlePetSelect(pet.id)}>
-                {pet.name}
-              </li>
-            ))}
-          </ul>
+          {showOptions && pets.length > 0 && (
+            <ul className="absolute z-10 mt-2 bg-white border border-gray-300 w-full rounded shadow-lg">
+              {pets.map((pet) => (
+                <li
+                  key={pet.id}
+                  className="cursor-pointer p-2 hover:bg-gray-200"
+                  onMouseDown={() => handlePetSelect(pet)}
+                >
+                  {pet.name}
+                </li>
+              ))}
+              {pets.length === 0 && (
+                <li className="p-2">No results returned from this query.</li>
+              )}
+            </ul>
+          )}
         </div>
         <div className="mb-4">
           <label

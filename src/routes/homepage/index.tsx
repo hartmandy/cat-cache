@@ -27,6 +27,7 @@ const Homepage = () => {
     const visitsData = await getVisits();
     setVisits(visitsData);
   };
+
   return (
     <>
       <div className="items-center flex justify-between p-6">
@@ -58,7 +59,11 @@ const Homepage = () => {
       <div className="p-6">
         <PatientTable visits={visits} />
       </div>
-      <OnboardModal show={showOnboardModal} onClose={handleCloseModal} />
+      <OnboardModal
+        show={showOnboardModal}
+        onClose={handleCloseModal}
+        onSubmit={fetchVisits}
+      />
 
       <IntakeModal
         show={showIntakeModal}

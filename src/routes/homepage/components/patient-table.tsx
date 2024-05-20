@@ -2,193 +2,18 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { TargetIcon } from "@radix-ui/react-icons";
 
+const StatusEnum = {
+  JUST_ARRIVED: "Just Arrived",
+  IN_TREATMENT: "In Treatment",
+  UNDER_OBSERVATION: "Under Observation",
+  STABLE: "Stable",
+  RECOVERING: "Recovering",
+};
+
 const PatientListTable = ({ visits }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const itemsPerPage = 10;
-
-  const patients = [
-    {
-      id: 1,
-      petName: "Buddy",
-      petType: "Dog",
-      petBreed: "Golden Retriever",
-      ownerName: "John Doe",
-      ownerContact: "555-1234",
-      status: "In Treatment",
-    },
-    {
-      id: 2,
-      petName: "Mittens",
-      petType: "Cat",
-      petBreed: "Siamese",
-      ownerName: "Jane Smith",
-      ownerContact: "555-5678",
-      status: "Stable",
-    },
-    {
-      id: 3,
-      petName: "Charlie",
-      petType: "Dog",
-      petBreed: "Labrador",
-      ownerName: "Michael Johnson",
-      ownerContact: "555-8765",
-      status: "Under Observation",
-    },
-    {
-      id: 4,
-      petName: "Whiskers",
-      petType: "Cat",
-      petBreed: "Maine Coon",
-      ownerName: "Emily Davis",
-      ownerContact: "555-4321",
-      status: "Recovering",
-    },
-    {
-      id: 5,
-      petName: "Fluffy",
-      petType: "Bird",
-      petBreed: "Macaw",
-      ownerName: "Dale Cooper",
-      ownerContact: "555-3948",
-      status: "Recovering",
-    },
-    {
-      id: 6,
-      petName: "Rex",
-      petType: "Dog",
-      petBreed: "German Shepherd",
-      ownerName: "Sandra Lee",
-      ownerContact: "555-2298",
-      status: "In Treatment",
-    },
-    {
-      id: 7,
-      petName: "Shadow",
-      petType: "Cat",
-      petBreed: "Persian",
-      ownerName: "Sam Green",
-      ownerContact: "555-9921",
-      status: "Stable",
-    },
-    {
-      id: 8,
-      petName: "Peppy",
-      petType: "Bird",
-      petBreed: "Parakeet",
-      ownerName: "Nina Brown",
-      ownerContact: "555-1293",
-      status: "Under Observation",
-    },
-    {
-      id: 9,
-      petName: "Simba",
-      petType: "Dog",
-      petBreed: "Beagle",
-      ownerName: "Mark White",
-      ownerContact: "555-3871",
-      status: "Recovering",
-    },
-    {
-      id: 10,
-      petName: "Snowball",
-      petType: "Cat",
-      petBreed: "Ragdoll",
-      ownerName: "Anna Grey",
-      ownerContact: "555-8371",
-      status: "In Treatment",
-    },
-    {
-      id: 11,
-      petName: "Max",
-      petType: "Dog",
-      petBreed: "Bulldog",
-      ownerName: "Lucas Black",
-      ownerContact: "555-4827",
-      status: "Stable",
-    },
-    {
-      id: 12,
-      petName: "Chirpy",
-      petType: "Bird",
-      petBreed: "Canary",
-      ownerName: "Linda Red",
-      ownerContact: "555-9583",
-      status: "Under Observation",
-    },
-    {
-      id: 13,
-      petName: "Bella",
-      petType: "Cat",
-      petBreed: "Sphynx",
-      ownerName: "Olivia Green",
-      ownerContact: "555-2837",
-      status: "Recovering",
-    },
-    {
-      id: 14,
-      petName: "Oscar",
-      petType: "Dog",
-      petBreed: "Boxer",
-      ownerName: "Harrison White",
-      ownerContact: "555-4826",
-      status: "In Treatment",
-    },
-    {
-      id: 15,
-      petName: "Tweety",
-      petType: "Bird",
-      petBreed: "Cockatiel",
-      ownerName: "Samantha Blue",
-      ownerContact: "555-7293",
-      status: "Stable",
-    },
-    {
-      id: 16,
-      petName: "Ginger",
-      petType: "Cat",
-      petBreed: "Abyssinian",
-      ownerName: "Jack Grey",
-      ownerContact: "555-9382",
-      status: "Under Observation",
-    },
-    {
-      id: 17,
-      petName: "Duke",
-      petType: "Dog",
-      petBreed: "Doberman",
-      ownerName: "Lily Brown",
-      ownerContact: "555-8472",
-      status: "Recovering",
-    },
-    {
-      id: 18,
-      petName: "Polly",
-      petType: "Bird",
-      petBreed: "Parrot",
-      ownerName: "Ella White",
-      ownerContact: "555-2938",
-      status: "In Treatment",
-    },
-    {
-      id: 19,
-      petName: "Toby",
-      petType: "Dog",
-      petBreed: "Poodle",
-      ownerName: "Amelia Blue",
-      ownerContact: "555-4738",
-      status: "Stable",
-    },
-    {
-      id: 20,
-      petName: "Luna",
-      petType: "Cat",
-      petBreed: "Bengal",
-      ownerName: "Chloe Red",
-      ownerContact: "555-2847",
-      status: "Under Observation",
-    },
-  ];
 
   const filteredPatients = visits.filter(
     (patient) =>
@@ -272,7 +97,7 @@ const PatientListTable = ({ visits }) => {
                 >
                   <TargetIcon className={`mr-2 w-5 h-5`} />
                   <span className="text-nowrap overflow-ellipsis">
-                    {patient.status}
+                    {StatusEnum[patient.status]}
                   </span>
                 </div>
               </td>

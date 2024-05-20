@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
 import Modal from "./modal.tsx";
-import { onboardPet, searchOwner } from "../../../data/pet.ts";
+import {
+  onboardOwnerAndPet,
+  onboardPetForExistingOwner,
+  searchOwner,
+} from "../../../data/pet.ts";
+import debounce from "lodash.debounce";
 
 interface OnboardModalProps {
   show: boolean;
   onClose: () => void;
+  onSubmit: () => void;
 }
 
 interface FormData {
@@ -20,6 +26,14 @@ interface FormData {
   reason: string;
 }
 
+interface Owner {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+}
+
 const initialFormData: FormData = {
   firstName: "",
   lastName: "",
@@ -33,16 +47,21 @@ const initialFormData: FormData = {
   reason: "",
 };
 
-const OnboardModal: React.FC<OnboardModalProps> = ({ show, onClose }) => {
+const OnboardModal: React.FC<OnboardModalProps> = ({
+  show,
+  onClose,
+  onSubmit,
+}) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<FormData>>({});
-  const [owners, setOwners] = useState<string[]>([]);
+  const [owners, setOwners] = useState<Owner[]>([]);
   const [ownerSearch, setOwnerSearch] = useState<string>("");
-  const [selectedOwner, setSelectedOwner] = useState<string | null>(null);
+  const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
   const [isReturningOwner, setIsReturningOwner] = useState<boolean | null>(
     null
   );
+  const [showOptions, setShowOptions] = useState(false);
 
   useEffect(() => {
     const debounceTimeout = setTimeout(() => {
@@ -51,6 +70,20 @@ const OnboardModal: React.FC<OnboardModalProps> = ({ show, onClose }) => {
       }
     }, 300);
     return () => clearTimeout(debounceTimeout);
+  }, [ownerSearch]);
+
+  useEffect(() => {
+    if (ownerSearch) {
+      const fetchOwners = debounce(async () => {
+        const owners = await searchOwner(ownerSearch);
+        setOwners(owners);
+        setShowOptions(true);
+      }, 300);
+      fetchOwners();
+    } else {
+      setOwners([]);
+      setShowOptions(false);
+    }
   }, [ownerSearch]);
 
   const handleChange = (
@@ -65,21 +98,21 @@ const OnboardModal: React.FC<OnboardModalProps> = ({ show, onClose }) => {
     }));
   };
 
-  const handleOwnerSelect = (owner: string) => {
+  const handleOwnerSelect = (owner: Owner) => {
     setSelectedOwner(owner);
-    setOwnerSearch("");
-    setStep(3);
+    setOwnerSearch(owner.firstName + " " + owner.lastName);
   };
 
-  const validate = (): Partial<FormData> => {
+  const validate = (searchOwnerId): Partial<FormData> => {
     const newErrors: Partial<FormData> = {};
-
-    if (!formData.firstName) newErrors.firstName = "First name is required";
-    if (!formData.lastName) newErrors.lastName = "Last name is required";
-    if (!formData.email) newErrors.email = "Email is required";
-    if (!formData.phone) newErrors.phone = "Phone number is required";
-    else if (!/^\d{10}$/.test(formData.phone))
-      newErrors.phone = "Phone number must be 10 digits";
+    if (!searchOwnerId) {
+      if (!formData.firstName) newErrors.firstName = "First name is required";
+      if (!formData.lastName) newErrors.lastName = "Last name is required";
+      if (!formData.email) newErrors.email = "Email is required";
+      if (!formData.phone) newErrors.phone = "Phone number is required";
+      else if (!/^\d{10}$/.test(formData.phone))
+        newErrors.phone = "Phone number must be 10 digits";
+    }
     if (!formData.petName) newErrors.petName = "Pet name is required";
     if (!formData.reason) newErrors.reason = "Reason for visit is required";
 
@@ -88,11 +121,16 @@ const OnboardModal: React.FC<OnboardModalProps> = ({ show, onClose }) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const validationErrors = validate();
+    const validationErrors = validate(selectedOwner?.id);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
     } else {
-      await onboardPet(formData);
+      if (selectedOwner) {
+        await onboardPetForExistingOwner(formData, selectedOwner.id);
+      } else {
+        await onboardOwnerAndPet(formData);
+      }
+      onSubmit();
       onClose();
     }
   };
@@ -123,142 +161,157 @@ const OnboardModal: React.FC<OnboardModalProps> = ({ show, onClose }) => {
     </div>
   );
 
-  const renderOwnerStep = () => (
-    <div>
-      {isReturningOwner ? (
-        <div>
-          <h3 className="mb-2">Owner Information</h3>
-          <input
-            type="text"
-            placeholder="Search Owner"
-            value={ownerSearch}
-            onChange={(e) => setOwnerSearch(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
-          <ul className="mt-2">
-            {owners.map((owner) => (
-              <li
-                key={owner}
-                className="cursor-pointer p-2 hover:bg-gray-200"
-                onClick={() => handleOwnerSelect(owner)}
-              >
-                {owner}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <div>
-          <h3 className="mb-2">New Owner Information</h3>
-          <div className="mb-4 flex gap-3">
-            <div className="w-1/2">
-              <label
-                className="block text-gray-700 text-sm font-bold mb-2"
-                htmlFor="firstName"
-              >
-                First Name
-              </label>
+  const renderOwnerStep = () => {
+    return (
+      <div>
+        {isReturningOwner ? (
+          <div>
+            <h3 className="mb-2">Owner Information</h3>
+            <div className="relative">
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="firstName"
                 type="text"
-                placeholder="First Name"
-                value={formData.firstName}
-                onChange={handleChange}
-              />
-              {errors.firstName && (
-                <p className="text-red-500 text-xs italic">
-                  {errors.firstName}
-                </p>
-              )}
-            </div>
-            <div className="w-1/2">
-              <label
-                className="block text-gray-700 text-sm font-bold mb-2"
-                htmlFor="lastName"
-              >
-                Last Name
-              </label>
-              <input
+                placeholder="Search Owner"
+                value={ownerSearch}
+                onChange={(e) => setOwnerSearch(e.target.value)}
+                onBlur={() => setShowOptions(false)}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="lastName"
-                type="text"
-                placeholder="Last Name"
-                value={formData.lastName}
-                onChange={handleChange}
               />
-              {errors.lastName && (
-                <p className="text-red-500 text-xs italic">{errors.lastName}</p>
+              {showOptions && (
+                <ul className="absolute z-10 mt-2 bg-white border border-gray-300 w-full rounded shadow-lg">
+                  {owners.map((owner) => (
+                    <li
+                      key={owner.id}
+                      className="cursor-pointer p-2 hover:bg-gray-200"
+                      onClick={() => {
+                        handleOwnerSelect(owner);
+                        setShowOptions(false);
+                      }}
+                    >
+                      {owner.firstName} {owner.lastName} - {owner.email} -{" "}
+                      {owner.phone}
+                    </li>
+                  ))}
+                  {owners.length === 0 ? (
+                    <li>No results returned from this query.</li>
+                  ) : null}
+                </ul>
               )}
             </div>
           </div>
-          <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="email"
-            >
-              Email
-            </label>
-            <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="email"
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-            {errors.email && (
-              <p className="text-red-500 text-xs italic">{errors.email}</p>
-            )}
+        ) : (
+          <div>
+            <h3 className="mb-2">New Owner Information</h3>
+            <div className="mb-4 flex gap-3">
+              <div className="w-1/2">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="firstName"
+                >
+                  First Name
+                </label>
+                <input
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="firstName"
+                  type="text"
+                  placeholder="First Name"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                />
+                {errors.firstName && (
+                  <p className="text-red-500 text-xs italic">
+                    {errors.firstName}
+                  </p>
+                )}
+              </div>
+              <div className="w-1/2">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="lastName"
+                >
+                  Last Name
+                </label>
+                <input
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="lastName"
+                  type="text"
+                  placeholder="Last Name"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                />
+                {errors.lastName && (
+                  <p className="text-red-500 text-xs italic">
+                    {errors.lastName}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="mb-4">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="email"
+              >
+                Email
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="email"
+                type="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-xs italic">{errors.email}</p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label
+                className="block text-gray-700 text-sm font-bold mb-2"
+                htmlFor="phone"
+              >
+                Phone Number
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="phone"
+                type="text"
+                placeholder="Phone Number"
+                value={formData.phone}
+                onChange={handleChange}
+              />
+              {errors.phone && (
+                <p className="text-red-500 text-xs italic">{errors.phone}</p>
+              )}
+            </div>
           </div>
-          <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="phone"
-            >
-              Phone Number
-            </label>
-            <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="phone"
-              type="text"
-              placeholder="Phone Number"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-            {errors.phone && (
-              <p className="text-red-500 text-xs italic">{errors.phone}</p>
-            )}
-          </div>
+        )}
+        <div className="flex items-center justify-between mt-4">
+          <button
+            onClick={() => setStep(1)}
+            className="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+          >
+            Back
+          </button>
+          <button
+            onClick={() => setStep(3)}
+            className="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded disabled:bg-slate-400"
+            disabled={
+              (isReturningOwner && !Boolean(selectedOwner)) ||
+              (!isReturningOwner &&
+                !Boolean(
+                  formData.firstName &&
+                    formData.lastName &&
+                    formData.email &&
+                    formData.phone
+                ))
+            }
+          >
+            Next
+          </button>
         </div>
-      )}
-      <div className="flex items-center justify-between mt-4">
-        <button
-          onClick={() => setStep(1)}
-          className="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
-        >
-          Back
-        </button>
-        <button
-          onClick={() => setStep(3)}
-          className="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded disabled:bg-slate-400"
-          disabled={
-            (isReturningOwner && !Boolean(ownerSearch)) ||
-            (!isReturningOwner &&
-              !Boolean(
-                formData.firstName &&
-                  formData.lastName &&
-                  formData.email &&
-                  formData.phone
-              ))
-          }
-        >
-          Next
-        </button>
       </div>
-    </div>
-  );
-
+    );
+  };
   const renderPetStep = () => (
     <div>
       <h3 className="mb-2">Pet Information</h3>
