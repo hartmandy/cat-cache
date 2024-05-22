@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
+import { debounce } from "lodash";
 import PatientTable from "./components/patient-table.tsx";
 import OnboardModal from "./components/onboard-modal.tsx";
 import IntakeModal from "./components/intake-modal.tsx";
 import { getVisits } from "../../data/visits.ts";
+import Pagination from "../../components/pagination.tsx";
 
 const Homepage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showOnboardModal, setShowOnboardModal] = useState(false);
   const [showIntakeModal, setShowIntakeModal] = useState(false);
-  const [visits, setVisits] = useState<any[]>([]);
+  const [visitData, setVisitData] = useState<any>({});
+  const query = searchParams.get("query") || "";
 
   const formattedDate = formatDate(new Date());
 
@@ -19,14 +24,33 @@ const Homepage = () => {
     setShowIntakeModal(false);
   };
 
+  const fetchVisits = async () => {
+    const page = parseInt(searchParams.get("page") || "1");
+    const perPage = 8;
+    const queryParam = searchParams.get("query") || "";
+    const visitsData = await getVisits(page, perPage, queryParam);
+    setVisitData(visitsData);
+  };
+
+  const handlePageChange = (newPage) => {
+    setSearchParams({ page: newPage.toString(), query });
+  };
+
+  const debouncedSetSearchParams = useCallback(
+    debounce((newQuery) => {
+      setSearchParams({ page: "1", query: newQuery });
+    }, 500),
+    []
+  );
+
+  const handleQueryChange = (e) => {
+    const newQuery = e.target.value;
+    debouncedSetSearchParams(newQuery);
+  };
+
   useEffect(() => {
     fetchVisits();
-  }, []);
-
-  const fetchVisits = async () => {
-    const visitsData = await getVisits();
-    setVisits(visitsData);
-  };
+  }, [searchParams]);
 
   return (
     <>
@@ -57,7 +81,17 @@ const Homepage = () => {
       <hr className="border-slate-200" />
 
       <div className="p-6">
-        <PatientTable visits={visits} />
+        <PatientTable
+          visits={visitData.visits}
+          onChange={handleQueryChange}
+          searchQuery={query}
+        />
+        <Pagination
+          currentPage={parseInt(searchParams.get("page") || "1")}
+          totalItems={visitData.total}
+          itemsPerPage={8}
+          onPageChange={handlePageChange}
+        />
       </div>
       <OnboardModal
         show={showOnboardModal}
