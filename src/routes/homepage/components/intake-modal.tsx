@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import Modal from "./modal.tsx";
+import Modal from "../../../components/modal.tsx";
 import debounce from "lodash.debounce";
 
 interface Pet {

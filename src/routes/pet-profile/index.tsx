@@ -1,35 +1,37 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
-import { NavLink, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getPetById } from "../../data/pet.ts";
-import { Patient, Notes, Status } from "../../types.ts";
-import NotesPanel from "./components/notes-panel.tsx";
+import { Patient, Visit } from "../../types.ts";
+import { useNavigate } from "react-router-dom";
+import NotesModal from "./components/visit-modal.tsx";
 
 const PetProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [animal, setAnimal] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showNotesPanel, setShowNotesPanel] = useState(false);
-  const [currentNotes, setCurrentNotes] = useState<Notes | null>(null);
-  const [currentStatuses, setCurrentStatuses] = useState<Status[]>([]);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [currentVisit, setCurrentVisit] = useState<Visit | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchAnimal = async () => {
-      if (id) {
-        const animalData = await getPetById(parseInt(id));
-        setAnimal(animalData);
-        setLoading(false);
-      }
-    };
-
     fetchAnimal();
   }, [id]);
 
-  const handleViewClick = (notes: Notes, statuses: Status[]) => {
-    setCurrentNotes(notes);
-    setCurrentStatuses(statuses);
-    setShowNotesPanel(true);
+  const fetchAnimal = async () => {
+    if (id) {
+      const animalData = await getPetById(parseInt(id));
+      setAnimal(animalData);
+      setLoading(false);
+    }
   };
+
+  const handleViewClick = (visit: Visit) => {
+    setCurrentVisit(visit);
+    setShowNotesModal(true);
+  };
+
+  const handleNavigate = () => navigate(-1);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -43,9 +45,12 @@ const PetProfile: React.FC = () => {
     <div className="relative">
       <div className="items-center flex justify-between p-6">
         <div>
-          <NavLink to=".." className="text-gray-500 text-sm flex gap-2 pb-2">
+          <button
+            onClick={handleNavigate}
+            className="text-gray-500 text-sm flex gap-2 pb-2"
+          >
             <ArrowLeftIcon /> Go back
-          </NavLink>
+          </button>
           <h1 className="md:text-3xl lg:text-4xl text-2xl font-bold text-gray-600">
             {animal.name}
           </h1>
@@ -95,7 +100,7 @@ const PetProfile: React.FC = () => {
                 </td>
                 <td className="py-2 px-4">
                   <button
-                    onClick={() => handleViewClick(visit.notes, visit.statuses)}
+                    onClick={() => handleViewClick(visit)}
                     className="text-blue-500 hover:underline"
                   >
                     View
@@ -107,11 +112,11 @@ const PetProfile: React.FC = () => {
         </table>
       </div>
 
-      <NotesPanel
-        notes={currentNotes}
-        statuses={currentStatuses}
-        onClose={() => setShowNotesPanel(false)}
-        show={showNotesPanel}
+      <NotesModal
+        visit={currentVisit}
+        onClose={() => setShowNotesModal(false)}
+        onSubmit={fetchAnimal}
+        show={showNotesModal}
       />
     </div>
   );

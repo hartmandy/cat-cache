@@ -8,6 +8,7 @@ const StatusEnum = {
   UNDER_OBSERVATION: "Under Observation",
   STABLE: "Stable",
   RECOVERING: "Recovering",
+  COMPLETE: "Complete",
 };
 
 interface Visit {
@@ -17,7 +18,9 @@ interface Visit {
   petBreed: string;
   ownerName: string;
   ownerContact: string;
+  ownerEmail: string; // Add ownerEmail to the interface
   status: string;
+  petId: number;
 }
 
 const formatPhoneNumber = (phoneNumberString) => {
@@ -89,8 +92,11 @@ const PatientListTable = ({
                   </div>
                 </td>
                 <td className="w-1/6 py-2 px-4 text-left">
-                  <div>{visit.ownerName}</div>
-                  <div>{formatPhoneNumber(visit.ownerContact)}</div>
+                  <div className="text-sm">
+                    <div className="font-semibold">{visit.ownerName}</div>
+                    <div>{formatPhoneNumber(visit.ownerContact)}</div>
+                    <div className="text-gray-600">{visit.ownerEmail}</div>
+                  </div>
                 </td>
                 <td className="w-2/6 py-2 px-4 text-left">
                   <div
@@ -106,7 +112,7 @@ const PatientListTable = ({
                 </td>
                 <td className="w-1/6 py-2 px-4 text-left">
                   <Link
-                    to={`/patient-profile/${visit.id}`}
+                    to={`/patient-profile/${visit.petId}`}
                     className="text-blue-500 hover:underline"
                   >
                     View

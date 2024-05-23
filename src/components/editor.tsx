@@ -18,7 +18,8 @@ const EDITOR_JS_TOOLS = {
   delimiter: Delimiter,
   link: Link,
 };
-const Editor = ({ data, onChange, editorblock }) => {
+
+const Editor = ({ data, onChange, editorblock, isDisabled }) => {
   const ref = useRef<EditorJS | null>(null);
   //Initialize editorjs
   useEffect(() => {
@@ -26,7 +27,6 @@ const Editor = ({ data, onChange, editorblock }) => {
     if (!ref.current) {
       const editor = new EditorJS({
         holder: editorblock,
-
         tools: EDITOR_JS_TOOLS,
         data: data,
         async onChange(api, event) {

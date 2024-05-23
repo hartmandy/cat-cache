@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Modal from "./modal.tsx";
+import Modal from "../../../components/modal.tsx";
 import {
   onboardOwnerAndPet,
   onboardPetForExistingOwner,

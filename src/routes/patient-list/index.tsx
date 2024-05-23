@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { debounce } from "lodash";
+import debounce from "lodash.debounce";
 import PatientListTable from "./components/patient-list-table.tsx";
 import Pagination from "../../components/pagination.tsx";
 import { getPatients } from "../../data/pet.ts";

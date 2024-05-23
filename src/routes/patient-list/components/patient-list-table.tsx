@@ -7,8 +7,11 @@ export interface Patient {
   age: number;
   type: string;
   breed: string;
-  ownerName: string;
-  ownerContact: string;
+  owner: {
+    name: string;
+    contact: string;
+    email: string;
+  };
 }
 
 interface PatientListTableProps {
@@ -28,6 +31,23 @@ const PatientListTable: React.FC<PatientListTableProps> = ({
   onChange,
   searchQuery,
 }) => {
+  const formatOwnerInfo = (owner) => {
+    return {
+      name: `${owner.firstName} ${owner.lastName}`,
+      contact: formatPhoneNumber(owner.phone),
+      email: owner.email,
+    };
+  };
+
+  const patientsFormatted = patients.map((patient) => ({
+    id: patient.id,
+    name: patient.name,
+    age: patient.age,
+    type: patient.type,
+    breed: patient.breed,
+    owner: formatOwnerInfo(patient.owner),
+  }));
+
   return (
     <div className="overflow-x-auto">
       <div className="flex justify-between items-center mb-4">
@@ -45,24 +65,23 @@ const PatientListTable: React.FC<PatientListTableProps> = ({
       <table className="min-w-full table-fixed">
         <thead className="bg-slate-100">
           <tr>
-            <th className="w-1/6 py-2 px-4 text-left rounded-tl-lg rounded-bl-lg">
+            <th className="w-1/5 py-2 px-4 text-left rounded-tl-lg rounded-bl-lg">
               Pet Name
             </th>
-            <th className="w-1/6 py-2 px-4 text-left">Pet Type</th>
-            <th className="w-1/6 py-2 px-4 text-left">Pet Breed</th>
-            <th className="w-1/6 py-2 px-4 text-left">Owner Name</th>
-            <th className="w-1/6 py-2 px-4 text-left">Owner Contact</th>
-            <th className="w-1/6 py-2 px-4 text-left">Age</th>
-            <th className="w-1/6 py-2 px-4 text-left rounded-tr-lg rounded-br-lg">
+            <th className="w-1/5 py-2 px-4 text-left">Pet Type</th>
+            <th className="w-1/5 py-2 px-4 text-left">Pet Breed</th>
+            <th className="w-1/5 py-2 px-4 text-left">Owner Info</th>
+            <th className="w-1/5 py-2 px-4 text-left">Age</th>
+            <th className="w-1/5 py-2 px-4 text-left rounded-tr-lg rounded-br-lg">
               Profile
             </th>
           </tr>
         </thead>
         <tbody>
-          {patients.map((patient) => (
+          {patientsFormatted.map((patient) => (
             <tr key={patient.id}>
-              <td className="w-1/6 py-2 px-4">{patient.name}</td>
-              <td className="w-1/6 py-2 px-4">
+              <td className="w-1/5 py-2 px-4">{patient.name}</td>
+              <td className="w-1/5 py-2 px-4">
                 <div
                   className={`inline-flex rounded-full px-2 py-1 font-semibold ${getPetTypeClassNames(
                     patient.type
@@ -71,15 +90,20 @@ const PatientListTable: React.FC<PatientListTableProps> = ({
                   {patient.type}
                 </div>
               </td>
-              <td className="w-1/6 py-2 px-4">
+              <td className="w-1/5 py-2 px-4">
                 <div className="inline-flex bg-green-100 text-green-800 rounded-full px-2 py-1 font-semibold">
                   {patient.breed}
                 </div>
               </td>
-              <td className="w-1/6 py-2 px-4">{patient.ownerName}</td>
-              <td className="w-1/6 py-2 px-4">{patient.ownerContact}</td>
-              <td className="w-1/6 py-2 px-4">{patient.age}</td>
-              <td className="w-1/6 py-2 px-4">
+              <td className="w-1/5 py-2 px-4">
+                <div className="text-sm">
+                  <div className="font-semibold">{patient.owner.name}</div>
+                  <div>{patient.owner.contact}</div>
+                  <div className="text-gray-600">{patient.owner.email}</div>
+                </div>
+              </td>
+              <td className="w-1/5 py-2 px-4">{patient.age}</td>
+              <td className="w-1/5 py-2 px-4">
                 <Link
                   to={`/patient-profile/${patient.id}`}
                   className="text-blue-500 hover:underline"
@@ -96,3 +120,12 @@ const PatientListTable: React.FC<PatientListTableProps> = ({
 };
 
 export default PatientListTable;
+
+const formatPhoneNumber = (phoneNumber) => {
+  const cleaned = ("" + phoneNumber).replace(/\D/g, "");
+  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+  if (match) {
+    return `(${match[1]}) ${match[2]}-${match[3]}`;
+  }
+  return phoneNumber;
+};

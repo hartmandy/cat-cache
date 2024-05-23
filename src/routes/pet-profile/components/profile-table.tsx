@@ -6,33 +6,6 @@ const ProfileTable = ({ visits }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const itemsPerPage = 10;
 
-  const patientVisit = [
-    {
-      id: 1,
-      visitDate: "2024-05-13 01:00 PM",
-      vet: "Benjamin Lee",
-      reasonForVisit: "Broken leg",
-      notes: "Surgery performed, pain medication administered",
-      status: "In Treatment",
-    },
-    {
-      id: 2,
-      visitDate: "2024-05-10 07:00 PM",
-      vet: "Benjamin Lee",
-      reasonForVisit: "Not eating",
-      notes: "Blood tests done, awaiting results",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      visitDate: "2023-05-22 01:00 PM",
-      vet: "Benjamin Lee",
-      reasonForVisit: "Vomiting",
-      notes: "Fluids administered, under observation",
-      status: "Completed",
-    },
-  ];
-
   const filteredVisits = visits.filter(
     (visit) =>
       visit.visitDate.toLowerCase().includes(searchQuery.toLowerCase()) ||

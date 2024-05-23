@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { debounce } from "lodash";
+import debounce from "lodash.debounce";
 import PatientTable from "./components/patient-table.tsx";
 import OnboardModal from "./components/onboard-modal.tsx";
 import IntakeModal from "./components/intake-modal.tsx";
@@ -26,7 +26,7 @@ const Homepage = () => {
 
   const fetchVisits = async () => {
     const page = parseInt(searchParams.get("page") || "1");
-    const perPage = 8;
+    const perPage = 6;
     const queryParam = searchParams.get("query") || "";
     const visitsData = await getVisits(page, perPage, queryParam);
     setVisitData(visitsData);
