@@ -66,24 +66,13 @@ const OnboardModal: React.FC<OnboardModalProps> = ({
   useEffect(() => {
     const debounceTimeout = setTimeout(() => {
       if (ownerSearch) {
-        searchOwner(ownerSearch).then((results) => setOwners(results));
+        searchOwner(ownerSearch).then((results) => {
+          setOwners(results);
+          setShowOptions(true);
+        });
       }
     }, 300);
     return () => clearTimeout(debounceTimeout);
-  }, [ownerSearch]);
-
-  useEffect(() => {
-    if (ownerSearch) {
-      const fetchOwners = debounce(async () => {
-        const owners = await searchOwner(ownerSearch);
-        setOwners(owners);
-        setShowOptions(true);
-      }, 300);
-      fetchOwners();
-    } else {
-      setOwners([]);
-      setShowOptions(false);
-    }
   }, [ownerSearch]);
 
   const handleChange = (
@@ -100,7 +89,9 @@ const OnboardModal: React.FC<OnboardModalProps> = ({
 
   const handleOwnerSelect = (owner: Owner) => {
     setSelectedOwner(owner);
-    setOwnerSearch(owner.firstName + " " + owner.lastName);
+    setOwnerSearch(`${owner.firstName} ${owner.lastName}`);
+    setShowOptions(false);
+    setOwners([]); // Clear owners to hide the dropdown
   };
 
   const validate = (searchOwnerId): Partial<FormData> => {
@@ -131,7 +122,7 @@ const OnboardModal: React.FC<OnboardModalProps> = ({
         await onboardOwnerAndPet(formData);
       }
       onSubmit();
-      onClose();
+      handleClose();
     }
   };
 
@@ -173,27 +164,20 @@ const OnboardModal: React.FC<OnboardModalProps> = ({
                 placeholder="Search Owner"
                 value={ownerSearch}
                 onChange={(e) => setOwnerSearch(e.target.value)}
-                onBlur={() => setShowOptions(false)}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               />
-              {showOptions && (
+              {showOptions && owners.length > 0 && (
                 <ul className="absolute z-10 mt-2 bg-white border border-gray-300 w-full rounded shadow-lg">
                   {owners.map((owner) => (
                     <li
                       key={owner.id}
                       className="cursor-pointer p-2 hover:bg-gray-200"
-                      onClick={() => {
-                        handleOwnerSelect(owner);
-                        setShowOptions(false);
-                      }}
+                      onClick={() => handleOwnerSelect(owner)}
                     >
                       {owner.firstName} {owner.lastName} - {owner.email} -{" "}
                       {owner.phone}
                     </li>
                   ))}
-                  {owners.length === 0 ? (
-                    <li>No results returned from this query.</li>
-                  ) : null}
                 </ul>
               )}
             </div>
@@ -312,6 +296,7 @@ const OnboardModal: React.FC<OnboardModalProps> = ({
       </div>
     );
   };
+
   const renderPetStep = () => (
     <div>
       <h3 className="mb-2">Pet Information</h3>

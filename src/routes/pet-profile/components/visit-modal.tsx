@@ -59,7 +59,7 @@ const VisitModal: React.FC<VisitModalProps> = ({
     <Modal show={show} onClose={onClose} maxWidth="max-w-3xl">
       <div
         className="p-6 overflow-y-auto h-[calc(100vh-100px)]"
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-2">Visit Details</h2>
